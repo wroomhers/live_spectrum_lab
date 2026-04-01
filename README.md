@@ -1,115 +1,40 @@
 # Live Spectrum Lab
 
-PipeWire kullanan Linux sistemlerde iki kucuk ses araci:
+PipeWire kullanan Linux sistemler için geliştirilmiş, gerçek zamanlı ses analiz ve test sinyali üretim araçları seti. Proje, kaynak ayırma (stem separation) yapmaz; doğrudan seçilen PipeWire çıkışının (sink) monitör akışını okur veya bu akışa sinyal gönderir.
 
-- `visualizer.py`: Sistemde calan sesi canli okuyup spektrum, bant enerjileri ve waveform gosterir.
-- `tone_lab.py`: Secilen output sink'e test tonu/generator sinyali yollar.
+İki temel araçtan oluşur:
+1. **`visualizer.py`**: Sistemde çalan sesi okuyan, interaktif spektrum ve dalga formu analizörü.
+2. **`tone_lab.py`**: Test tonları ve matematiksel formüllerle özel sinyaller üreten interaktif jeneratör.
 
-Proje stem ayirma yapmaz. Kick, vokal veya snare gibi kaynaklari ayri kanallara bolmez; mix'in tamamini analiz eder veya test sinyali uretir.
+---
 
-## Icerik
+## 1. Live Spectrum Lab (`visualizer.py`)
 
-### 1. Live Spectrum Lab
+Aktif PipeWire çıkışını (output sink) bulur ve GStreamer (`pipewiresrc`) yardımıyla PCM verisini okuyarak Tkinter arayüzünde görselleştirir. Tarayıcılar, medya oynatıcılar veya sistem sesleri dahil olmak üzere o an hoparlörden çıkan tüm sesi analiz eder.
 
-Canli analiz araci. Varsayilan PipeWire output sink'i bulur, GStreamer ile monitor akisini okur ve Tkinter arayuzunde gosterir.
+### Temel Özellikler
+* **Gerçek Zamanlı Analiz:** Full mix dalga formu (waveform) ve FFT bazlı spektrum önizlemesi.
+* **Frekans Bantları & Enerji Takibi:** Sesi SUB, KICK, LOW BASS, TREBLE gibi spesifik bantlara ayırarak zaman içindeki RMS enerjisini (timeline) ve tepe noktalarını (peak) gösterir.
+* **İnteraktif Arayüz Etkileşimleri:**
+    * **Sol Tık (Bant üzerinde):** Seçilen frekans bandını daha dar alt bantlara bölerek detaylı analiz (zoom) görünümüne geçer.
+    * **Sağ Tık (Timeline üzerinde):** İlgili zaman/enerji noktasına referans işaretçisi (marker) bırakır.
+    * **Orta Tık (Fare Tekerleği):** Bırakılan işaretçiyi siler.
+    * **Geri Butonu / ESC:** Üst banda geri döner veya uygulamayı kapatır.
+    * **Hover Tooltip:** Fare ile grafiğin üzerinde gezinirken frekans, zaman ve genlik değerlerini okur.
+* **Çoklu Cihaz Desteği:** GUI üzerinden aktif çıkış cihazını anlık olarak değiştirebilme.
 
-Ozellikler:
-
-- Canli FFT ozeti
-- Frekans bantlarina ayrilmis enerji timeline'i
-- Full mix waveform gorunumu
-- Cihaz/sink secimi
-- Fare ile banda zoom benzeri detay gorunumu
-- GUI acmadan hizli baglanti testi
-
-Calistirma:
-
+### CLI Kullanımı ve Argümanlar
 ```bash
-cd ~/Desktop/live_spectrum_lab
-./run_visualizer.sh
-```
-
-Dogrudan Python ile:
-
-```bash
+# Standart başlatma (varsayılan sink cihazını bulur)
 python3 visualizer.py
-```
 
-Faydali komutlar:
-
-```bash
+# Kullanılabilir cihazları (sink) listeleme
 python3 visualizer.py --list-targets
+
+# GUI açmadan hızlı bağlantı ve veri akışı testi (örneğin 2 saniye)
 python3 visualizer.py --probe-seconds 2
+
+# Belirli bir cihaza doğrudan bağlanma (ID: 51)
 python3 visualizer.py --target 51
+# veya
 PIPEWIRE_TARGET=51 python3 visualizer.py
-```
-
-### 2. Tone Lab
-
-Interaktif test tonu ureticisi. `pw-play` uzerinden secilen sink'e ses yollar ve ayni anda waveform/FFT preview gosterir.
-
-Ozellikler:
-
-- `sine`, `square`, `saw`, `triangle` waveform secimi
-- Iki osilator (`freq_a`, `freq_b`) ve mix kontrolu
-- Gain kontrolu
-- Formula modu
-- Farkli output sink secimi
-
-Calistirma:
-
-```bash
-cd ~/Desktop/live_spectrum_lab
-./run_tone_lab.sh
-```
-
-Dogrudan Python ile:
-
-```bash
-python3 tone_lab.py
-```
-
-Formula modu ornekleri:
-
-```text
-200
-200,400
-0.6*sine(200)+0.4*sine(400)
-0.7*square(220)
-0.4*sine(f1)+0.4*saw(f2)
-```
-
-## Gereksinimler
-
-Python tarafinda harici paket yok; standart kutuphaneler ve sistem araclari kullaniliyor.
-
-Gerekli ortam:
-
-- Linux
-- PipeWire
-- `wpctl`
-- `pw-play`
-- `gst-launch-1.0`
-- Tkinter (`python3-tk`)
-
-Ubuntu/Debian benzeri sistemlerde gereken paketler tipik olarak sunlardir:
-
-```bash
-sudo apt install python3 python3-tk pipewire-bin gstreamer1.0-tools gstreamer1.0-pipewire
-```
-
-Dagitima gore paket adlari degisebilir.
-
-## Nasil Calisir
-
-- `visualizer.py`, aktif output sink'i `wpctl status` ile bulur.
-- Secilen sink'in monitor akisindan PCM veri okumak icin `gst-launch-1.0 pipewiresrc` kullanir.
-- `tone_lab.py`, olusturdugu PCM veriyi `pw-play --target <sink_id>` ile secilen cihaza yollar.
-- Her iki uygulama da arayuz icin Tkinter kullanir.
-
-## Notlar
-
-- Varsayilan davranis aktif ses cikisini secmektir.
-- Analizor, hoparlor/cihaz monitor akisina baglandigi icin tarayici, muzik oynatici veya sistem sesi uzerinde calisir.
-- `Tone Lab` sesi dogrudan secilen output sink'e yollar; hoparlor aciksa duyarsin.
-- Wayland/X11 fark etmeksizin PipeWire oturumu oldugu surece calismasi hedeflenir.
