@@ -38,3 +38,57 @@ python3 visualizer.py --probe-seconds 2
 python3 visualizer.py --target 51
 # veya
 PIPEWIRE_TARGET=51 python3 visualizer.py
+2. Tone Lab (tone_lab.py)
+
+pw-play alt yapısını kullanarak doğrudan seçilen cihaza test sinyalleri gönderen interaktif osilatör aracıdır. Üretilen sinyali çıkışa gönderirken aynı anda arayüzde dalga formu ve FFT önizlemesini çizer.
+Temel Özellikler
+
+    Standart Dalga Formları: Sine, Square, Saw, Triangle.
+
+    Knob Modu: Çift osilatör (freq_a ve freq_b), osilatörler arası miks oranı ve ana kazanç (gain) kontrollerini arayüzdeki slider'lar ile anlık olarak yönetme.
+
+    Formula Modu: Sinyali doğrudan Python ifadeleriyle matematiksel olarak sentezleme. Formül kutusuna girilen ifadeler anında işlenerek sese dönüştürülür.
+
+    Canlı Cihaz Değişimi: Çalışma esnasında sesi farklı bir çıkışa (örneğin kulaklıktan hoparlöre) aktarabilme.
+
+Formula Modu Örnekleri
+
+Metin giriş kutusuna yazılabilecek geçerli ifadeler:
+
+    200 : 200 Hz'lik basit bir sinüs dalgası.
+
+    200, 400 : 200 Hz ve 400 Hz'lik iki sinüs dalgasının eşit miksi.
+
+    0.6*sine(200) + 0.4*sine(400) : Özel oranlanmış sinüs karışımı.
+
+    0.7*square(220) : 220 Hz'lik kare dalga.
+
+    0.4*sine(f1) + 0.4*saw(f2) : Arayüzdeki A ve B slider frekanslarını (f1 ve f2 değişkenleri) referans alan kompozit dalga.
+
+Çalıştırma
+Bash
+
+python3 tone_lab.py
+
+Gereksinimler ve Kurulum
+
+Python tarafında harici bir bağımlılık (pip paketi) bulunmamaktadır. Tüm işlemler standart kütüphaneler (math, threading, subprocess vb.) ve sistem araçlarıyla yürütülür.
+Sistem Gereksinimleri
+
+    Linux İşletim Sistemi (Wayland veya X11 fark etmeksizin PipeWire oturumu açık olmalı)
+
+    PipeWire (wpctl, pw-play)
+
+    GStreamer (gst-launch-1.0 ve pipewire eklentileri)
+
+    Tkinter (Arayüz için python3-tk)
+
+Ubuntu / Debian / Mint Kurulumu
+
+Gerekli sistem paketlerini aşağıdaki komutla kurabilirsiniz:
+Bash
+
+sudo apt update
+sudo apt install python3 python3-tk pipewire-bin gstreamer1.0-tools gstreamer1.0-pipewire
+
+(Diğer dağıtımlarda paket isimleri Arch için pipewire, gst-plugin-pipewire, tk; Fedora için pipewire-utils, gstreamer1-plugin-pipewire, python3-tkinter şeklinde farklılık gösterebilir.)
